@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+import click
+from os import listdir, symlink, path
+import datetime
+
+import utils
+
+dotfiles_path = path.join(utils.get_project_root(), 'dotfiles')
+allowed_dotfiles = [f for f in listdir(dotfiles_path) if path.isfile(path.join(dotfiles_path, f))]
+backup_timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+
+
+@click.command()
+@click.option('--file', '-f', multiple=True, required=True, help='File name for initializing.')
+def init(file):
+    for dotfile in file:
+        if dotfile not in allowed_dotfiles:
+            click.echo(click.style(f'Warn: unknown dotfile {dotfile}.', fg='yellow'))
+            continue
+
+        if utils.exist_in_home_dir(dotfile):
+            click.echo(f'Creating backup for {dotfile}.')
+            utils.backup_dotfile(dotfile, backup_timestamp)
+
+        click.echo(f'Creating a symlink for {dotfile}.')
+        utils.create_symlink(dotfile)
+
+init()
